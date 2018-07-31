@@ -5,8 +5,8 @@
   </el-form-item>
     <el-form-item label="用户类型">
      <el-select v-model="form.role" placeholder="请选择活动区域" style="width:310px">
-      <el-option label="管理员" value="admin"></el-option>
-      <el-option label="普通用户" value="user"></el-option>
+      <el-option label="管理员" value="0"></el-option>
+      <el-option label="普通用户" value="1"></el-option>
     </el-select>
   </el-form-item>
     <el-form-item label="部门名称">
@@ -60,9 +60,20 @@ export default {
             data: this.form
          }).then(function (response) {
             console.log(response);
+            this.$notify({
+            title: '成功',
+            message: '添加用户成功',
+            type: 'success'
+          });
+
         })
         .catch(function (error) {
             console.log(error);
+            this.$notify.error({
+            title: '错误',
+            message: '出现点小错误'
+          });
+
         });
         //  this.$refs[formName].validate((valid) => {
         //   if (valid) {
