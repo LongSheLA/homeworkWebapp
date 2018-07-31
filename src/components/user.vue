@@ -6,8 +6,8 @@
           <el-submenu index="1">
             <template slot="title"><i class="el-icon-message"></i>大作业</template>
             <el-menu-item-group>
-              <el-menu-item index="1-1">设备管理</el-menu-item>
-              <el-menu-item index="1-2">用户管理</el-menu-item>
+             <router-link to="/device"><el-menu-item index="1-1">设备管理</el-menu-item></router-link>
+              <router-link to="/user"><el-menu-item index="1-2">用户管理</el-menu-item></router-link>
             </el-menu-item-group>
           </el-submenu>
         </el-menu>
@@ -25,13 +25,15 @@
         <el-main>
             <el-table
               :data="tableData"
-              style="width: 100%">
-
+              stripe
+              style="width: 100%;  text-align: left"
+              :cell-class-name= "tableCellClassName">
             <el-table-column
                 label="用户名称"
-                width="180">
+                width="180"
+                class="cell">
                 <template slot-scope="scope">
-                  <span style="margin-left: 10px">{{ scope.row.name }}</span>
+                  <span>{{ scope.row.name }}</span>
                 </template>
             </el-table-column>
 
@@ -39,21 +41,16 @@
                 label="类型"
                 width="180">
                 <template slot-scope="scope">
-                  <el-popover trigger="hover" placement="top">
-                    <p>姓名: {{ scope.row.name }}</p>
-                    <p>住址: {{ scope.row.address }}</p>
-                    <div slot="reference" class="name-wrapper">
-                      <el-tag size="medium">{{ scope.row.role }}</el-tag>
-                    </div>
-                  </el-popover>
+                 <span>{{ scope.row.role }}</span>
                 </template>
             </el-table-column>
 
             <el-table-column
                 label="部门名称"
+              
                 width="180">
                 <template slot-scope="scope">
-                  <span style="margin-left: 10px">{{ scope.row.departmentName }}</span>
+                  <span>{{ scope.row.departmentName }}</span>
                 </template>
             </el-table-column>
 
@@ -61,7 +58,7 @@
                 label="科室名称"
                 width="180">
                 <template slot-scope="scope">
-                  <span style="margin-left: 10px">{{ scope.row.sectionName }}</span>
+                  <span>{{ scope.row.sectionName }}</span>
                 </template>
             </el-table-column>
 
@@ -69,7 +66,7 @@
                 label="手机号"
                 width="180">
                 <template slot-scope="scope">
-                  <span style="margin-left: 10px">{{ scope.row.phone }}</span>
+                  <span >{{ scope.row.phone }}</span>
                 </template>
               </el-table-column>
 
@@ -77,34 +74,76 @@
                 label="邮箱"
                 width="180">
                 <template slot-scope="scope">
-                  <span style="margin-left: 10px">{{ scope.row.email }}</span>
+                  <span>{{ scope.row.email }}</span>
                 </template>
               </el-table-column>
 
-              <el-table-column label="操作">
-                <template slot-scope="scope">
-                  <el-button
-                    size="mini"
-                    @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-                  <el-button
-                    size="mini"
-                    type="danger"
-                    @click="handleDelete(scope.$index, scope.row)">删除</el-button>
-                </template>
-              </el-table-column>
+               <el-table-column label="操作">
+                  <template slot-scope="scope">
+                    <el-button
+                      size="mini"
+                      @click="deviceAuth(scope.$index, scope.row)">分配设备</el-button>
+                  </template>
+                </el-table-column>
             </el-table>
 
+
+          
              <div class="pagination">
               <el-pagination
                 @size-change="handleSizeChange"
                 @current-change="handleCurrentChange"
                 :current-page="this.page"
-                :page-sizes="[1, 2, 3, 4]"
+                :page-sizes="[5, 10, 15, 20]"
                 :page-size="this.size"
                 layout="total, sizes, prev, pager, next, jumper"
                 :total='this.totalPage'>
               </el-pagination>  
             </div>
+
+            <el-dialog title="分配设备" :visible.sync="dialogTableVisible" @open="show">
+               <el-table
+                    ref="myTable"
+                    :data="deviceData"
+                    tooltip-effect="dark"
+                    style="width: 100%;  text-align: left"
+                    @selection-change="handleSelectionChange">
+
+                    <el-table-column
+                      type="selection"
+                      width="55"
+                    >
+                    </el-table-column>
+
+                    <el-table-column
+                      label="设备名称"
+                      width="120">
+                      <template slot-scope="scope">{{ scope.row.deviceName }}</template>
+                    </el-table-column>
+
+                    <el-table-column
+                      prop="deviceType"
+                      label="设备类型"
+                      width="120">
+                    </el-table-column>
+
+                    <el-table-column
+                      prop="devicePosition"
+                      label="设备位置" >
+                    </el-table-column>
+
+                    <el-table-column
+                      prop="deviceStatus"
+                      label="设备状态" >
+                    </el-table-column>
+
+                  </el-table>
+
+                  <div slot="footer" class="dialog-footer">
+                    <el-button @click="dialogTableVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="onSubmit()">确 定</el-button>
+                  </div>
+            </el-dialog>
 
         </el-main>
       </el-container>
@@ -115,36 +154,86 @@
 <script>
 import axios from 'axios'
 import AddUser from './addUserForm'
+import AssignDeviceForm from './assignDevice'
+import vue from 'vue'
 
 export default {
   name: 'User',
     data() {
       return {
         tableData: [],
+        deviceData:[],
         page:1,
-        size:1,
+        size:5,
         currentPage4:1,
-        totalPage:0
+        totalPage:0,
+        dialogTableVisible:false,
+        multipleSelection: [],
+        user:null
       }
     },
     created() {
-      this.getTableData()
+      this.getTableData();
+      this.getDeviceData();
     },
     methods: {
-
-      handleEdit: function(index, row) {
-        console.log(index, row);
+      //设置样式
+      tableCellClassName: function(row, rowIndex){
+        return "cell-style"
       },
-
-      handleDelete:function(index, row) {
-        console.log(index, row);
+      show(){
+        console.log("++++++++++++++++++++++")
+        // this.toggleSelection([this.deviceData[0]])
+          let sl= this.user.deviceList
+          let dl =this.deviceData
+          console.log(sl)
+          console.log(dl)
+      
+         vue.nextTick(_ =>{
+          sl.forEach(s =>{
+            this.$refs.myTable.toggleRowSelection(dl.find(d => parseInt(d.id) === parseInt(s.id)),true);
+          })
+         })
       },
-
+      deviceAuth: function(index, row) {
+      this.user = row
+      this.dialogTableVisible = true
+      }, 
+      //分页获取所有用户
       getTableData:function () {
         axios.get('/homework/findAllByPage?page='+this.page+'&size='+ this.size+'&now='+new Date().getTime())
           .then(response => {
+            console.log(response)
             this.tableData = response.data.data.content
             this.totalPage= response.data.data.totalElements
+          })
+          .catch(function (error) {
+            // handle error
+            console.log(error);
+          })
+          .then(function () {
+            // always executed
+          })
+      },
+
+      toggleSelection(rows) {
+      console.log(rows)
+      console.log("###############")
+      if (rows) {
+        rows.forEach(row => {
+          console.log("999")
+          this.$refs.myTable.toggleRowSelection(row);
+        });
+      } else {
+        this.$refs.myTable.clearSelection();
+      }
+    },
+
+      //获取所有设备
+      getDeviceData(){
+           axios.get('/homework/getAllDevice')
+          .then(response => {
+            this.deviceData = response.data.data
           })
           .catch(function (error) {
             // handle error
@@ -166,6 +255,35 @@ export default {
         this.page = val
         this.getTableData();
       },
+       handleSelectionChange(val) {
+        this.multipleSelection = val;
+      },
+
+       onSubmit(){
+        let user= this.user;
+        user.deviceList = this.multipleSelection;
+        axios({
+            method: 'post',
+            url: '/homework/saveUser',
+            data: user
+         }).then( (response) => {
+            console.log(response);
+            this.$notify({
+            title: '成功',
+            message: '分配设备成功',
+          
+          });
+        })
+        .catch((error)=> {
+            console.log(error);
+            this.$notify.error({
+            title: '错误',
+            message: '出现点小错误', 
+            type: 'success'
+          });
+        });
+      },
+
 
       addUser(){
         // const h = this.$createElement;
@@ -212,5 +330,11 @@ export default {
   }
   .pagination {
     margin-top: 10px;
+  }
+ .el-table .cell-style{
+    text-align: left !important
+  }
+  .cell{
+    text-align: left;
   }
 </style>

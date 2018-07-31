@@ -6,8 +6,8 @@
           <el-submenu index="1">
             <template slot="title"><i class="el-icon-message"></i>大作业</template>
             <el-menu-item-group>
-              <el-menu-item index="1-1">设备管理</el-menu-item>
-              <el-menu-item index="1-2">用户管理</el-menu-item>
+              <router-link to="/device"><el-menu-item index="1-1">设备管理</el-menu-item></router-link>
+              <router-link to="/user"><el-menu-item index="1-2">用户管理</el-menu-item></router-link>
             </el-menu-item-group>
           </el-submenu>
         </el-menu>
@@ -20,18 +20,18 @@
             <el-col :span="6"><span>设备管理</span> </el-col>
             <el-col :span="6"><el-button size='small' round @click="addUser">新增</el-button></el-col>
           </el-row>
-         
-          
+     
         </el-header>
         
         <el-main>
             <el-table
               :data="tableData"
-              style="width: 100%">
+              stripe
+              style="width: 100%;  text-align: left">
 
               <el-table-column
                 label="设备名称"
-                width="180">
+                width="220">
                 <template slot-scope="scope">
                   <span style="margin-left: 10px">{{ scope.row.deviceName }}</span>
                 </template>
@@ -39,7 +39,7 @@
 
               <el-table-column
                 label="设备类型"
-                width="180">
+                width="220">
                 <template slot-scope="scope">
                    <span style="margin-left: 10px">{{ scope.row.deviceType }}</span>
                 </template>
@@ -47,7 +47,7 @@
 
             <el-table-column
                 label="设备位置"
-                width="180">
+                width="250">
                 <template slot-scope="scope">
                   <span style="margin-left: 10px">{{ scope.row.devicePosition }}</span>
                 </template>
@@ -55,7 +55,7 @@
 
                <el-table-column
                 label="设备状态"
-                width="180">
+                width="220">
                 <template slot-scope="scope">
                   <span style="margin-left: 10px">{{ scope.row.deviceStatus }}</span>
                 </template>
@@ -63,26 +63,64 @@
 
               <el-table-column
                 label="操作"
-                width="180">
+                width="220">
                 <template slot-scope="scope">
                  <el-button
                     size="mini"
-                    @click="mangentUser(scope.$index, scope.row)">管理用户</el-button>
+                    @click="mangentUser(scope.$index, scope.row)">查看管理用户</el-button>
                 </template>
               </el-table-column>
-
             </el-table>
+
              <div class="pagination">
               <el-pagination
                 @size-change="handleSizeChange"
                 @current-change="handleCurrentChange"
                 :current-page="this.currentPage4"
-                :page-sizes="[1, 2, 3, 4]"
+                :page-sizes="[5, 10, 15, 20]"
                 :page-size="this.size"
                 layout="total, sizes, prev, pager, next, jumper"
                 :total='this.totalPage'>
-              </el-pagination>
-            </div>
+              </el-pagination>          
+          </div>
+
+          <el-dialog title="管理用户" :visible.sync="dialogTableVisible" >
+               <el-table
+                ref="multipleTable"
+                :data="userData"
+                tooltip-effect="dark"
+                style="width: 100%; text-align: left"
+              >
+
+                <el-table-column
+                  label="用户名称"
+                  width="120">
+                  <template slot-scope="scope">{{ scope.row.name }}</template>
+                </el-table-column>
+
+                <el-table-column
+                  prop="role"
+                  label="用户类型"
+                  width="120">
+                </el-table-column>
+
+                <el-table-column
+                  prop="departmentName"
+                  label="部门名称" >
+                </el-table-column>
+
+                <el-table-column
+                  prop="phone"
+                  label="手机" >
+                </el-table-column>
+
+                <el-table-column
+                  prop="email"
+                  label="邮箱" >
+                </el-table-column>
+              </el-table>
+               
+            </el-dialog>
         </el-main>
       </el-container>
 </el-container>
@@ -100,10 +138,12 @@ export default {
       return {
         tableData: [],
         page:1,
-        size:1,
+        size:5,
         currentPage4:1,
+        dialogTableVisible:false,
         totalPage:0,
-        userlist:[]
+        userlist:[],
+        userData:[]
       }
     },
     created() {
@@ -145,12 +185,11 @@ export default {
           showConfirmButton: false,
         })
       },  
+
       mangentUser(index, row){
-        this.$msgbox({
-          title: '设备授权',
-          message: <DeviceAuth row = {row} />,
-          showConfirmButton: false,
-        })   
+        console.log(row)
+        this.userData = row.userList;
+        this.dialogTableVisible = true
       }
       
     }
@@ -166,6 +205,9 @@ export default {
   }
   .el-aside {
     color: #333;
+  }
+   .pagination {
+    padding: 10px;
   }
   .pagination {
     margin-top: 10px;
